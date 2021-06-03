@@ -19,4 +19,16 @@ let rec eval: exp -> env -> value
       (match v1, v2 with
       | Int n1, Int n2 -> Int (n1 - n2)
       | _ -> raise (Failure "Type Error: non-numeric values"))
-  | _ -> Int 0
+  | READ -> Int (read_int())
+  | ISZERO e -> 
+    (match eval e env with
+    | Int n when n = 0 -> Bool true
+    | _ -> Bool false)
+  | IF (e1, e2, e3) ->
+    (match eval e1 env with
+    | Bool true -> eval e2 env
+    | Bool false -> eval e3 env
+    | _ -> raise (Failure "Type Error: condition must be Bool type"))
+  | LET (x, e1, e2) -> 
+    let v1 = eval e1 env in
+    eval e2 (extend_env (x, v1) env)
