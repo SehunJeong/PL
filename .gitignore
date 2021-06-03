@@ -3,3 +3,5 @@
 *.o
 *.swp
 a.out
+dune-project
+_build
