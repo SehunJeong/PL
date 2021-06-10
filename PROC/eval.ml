@@ -1,6 +1,5 @@
-open Env
 open Lang
-open Val
+open Domain
 
 let rec eval: exp -> env -> value
 = fun exp env ->
@@ -32,3 +31,10 @@ let rec eval: exp -> env -> value
   | LET (x, e1, e2) -> 
     let v1 = eval e1 env in
     eval e2 (extend_env (x, v1) env)
+  | PROC (x, e) -> Proc (x, e, env)
+  | SEQ (e1, e2) ->
+    (match eval e1 env with
+    | Proc (x, e, env') -> 
+      let v = eval e2 env in
+      eval e (extend_env (x, v) env')
+    | _ -> raise (Failure "Type Error: Sequence must begin with Proc type"))

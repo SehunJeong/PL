@@ -1,11 +1,23 @@
-open Lang
-open Val
-open Env
+open Domain
 open Eval
+open Lang
 
 let run: program -> value
 = fun pgm -> 
     eval pgm empty_env;;
+
+(* let x = 1
+ * in let f = proc (y) (x+y)
+ *    in let x = 2
+ *       in (f 3) *) (* 4 *)
+let e10 = LET("x", CONST 1, 
+            LET ("f", PROC ("y", ADD(VAR "x", VAR "y")), 
+              LET ("x", CONST 2, SEQ (VAR "f", CONST 3)))) in
+print_endline (string_of_value (run e10));;
+
+(* (proc (x) (x)) 1 *) (* 1 *)
+let e9 = SEQ(PROC ("x", VAR "x"), CONST 1) in
+print_endline (string_of_value (run e9));;
 
 (* let x = 1 in x + 2 *) (* 3 *)
 let e1 = LET ("x", CONST 1, ADD (VAR "x", CONST 2)) in
@@ -55,3 +67,5 @@ print_endline (string_of_value (run e3));;
 (* let x = 1 in let y = iszero x in x + y *) (* exception *)
 let e4 = LET ("x", CONST 1, LET ("y", ISZERO (VAR "x"), ADD (VAR "x", VAR "y"))) in
 print_endline (string_of_value (run e4));;
+
+
