@@ -32,9 +32,14 @@ let rec eval: exp -> env -> value
     let v1 = eval e1 env in
     eval e2 (extend_env (x, v1) env)
   | PROC (x, e) -> Proc (x, e, env)
+  | LETREC (f, x, e1, e2) ->
+    eval e2 (extend_env (f, (f, x, e1, env)) env)
   | SEQ (e1, e2) ->
     (match eval e1 env with
     | Proc (x, e, env') -> 
       let v = eval e2 env in
       eval e (extend_env (x, v) env')
-    | _ -> raise (Failure "Type Error: Sequence must begin with Proc type"))
+    | RecProc (f, x, e, env') ->
+      let v = eval e2 env in
+      eval e (extend_env (x, v) (extend_env (f, (f, x, e, env')) env'))
+    | _ -> raise (Failure "Type Error: Sequence must begin with Proc or RecProc type"))
