@@ -42,4 +42,4 @@ let rec eval: exp -> env -> value
     | RecProc (f, x, e, env') ->
       let v = eval e2 env in
       eval e (extend_env (x, v) (extend_env (f, (f, x, e, env')) env'))
-    | _ -> raise (Failure "Type Error: Sequence must begin with Proc or RecProc type"))
+    | _ -> raise (Failure "Type Error: Sequence must begin with Proc or RecProc type")) 
