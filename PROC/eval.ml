@@ -35,13 +35,19 @@ let rec eval: exp -> env -> value
   | LETREC (f, x, e1, e2) ->
     let rp = RecProc (f, x, e1, env) in
     eval e2 (extend_env (f, rp) env)
+  | LETMREC (f, x1, f_e, g, x2, g_e, e) ->
+    (*FIXME: *)
+    let rp1 = RecProc (f, x1, f_e, env) in
+    let rp2 = RecProc (g, x2, g_e, env) in
+    let env' = extend_env (f, rp1) env in
+    let env'' = extend_env (g, rp2) env' in
+    eval e env''   (* SEQ ("odd", 13) in env *)
   | SEQ (e1, e2) ->
+    let v = eval e2 env in
     (match eval e1 env with
     | Proc (x, e, env') -> 
-      let v = eval e2 env in
       eval e (extend_env (x, v) env')
     | RecProc (f, x, e, env') ->
-      let v = eval e2 env in
       let rp = RecProc (f, x, e, env') in
       eval e (extend_env (x, v) (extend_env (f, rp) env'))
-    | _ -> raise (Failure "Type Error: Sequence must begin with Proc or RecProc type")) 
+    | _ -> raise (Failure "Type Error: Sequence must begin with an expression that implies a Proc, RecProc, or MRecProc type object.")) 

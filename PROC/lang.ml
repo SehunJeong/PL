@@ -9,6 +9,7 @@ and exp =
     | IF of exp * exp * exp
     | LET of var * exp * exp
     | LETREC of var * var * exp * exp
+    | LETMREC of var * var * exp * var * var * exp * exp
     | PROC of var * exp
     | SEQ of exp * exp
 and var = string

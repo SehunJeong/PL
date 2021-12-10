@@ -5,9 +5,11 @@ type value =
   | Bool of bool
   | Proc of proc
   | RecProc of recproc
+  | MRecProc of mrecproc
 and env = (var * value) list
 and proc = var * exp * env
 and recproc = var * var * exp * env
+and mrecproc = var * var * exp * var * var * exp * env
 
 let string_of_value: value -> string
 = fun v ->
@@ -17,6 +19,7 @@ let string_of_value: value -> string
   | Bool false -> "false"
   | Proc _ -> "Procedure"
   | RecProc _ -> "RecProcedure"
+  | MRecProc _ -> "MRecProcedure"
 
 let empty_env = []
 
