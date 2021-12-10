@@ -37,8 +37,8 @@ let rec eval: exp -> env -> value
     eval e2 (extend_env (f, rp) env)
   | LETMREC (f, x1, f_e, g, x2, g_e, e) ->
     (*FIXME: *)
-    let rp1 = RecProc (f, x1, f_e, env) in
-    let rp2 = RecProc (g, x2, g_e, env) in
+    let rp1 = RecProc (f, x1, f_e, extend_env (g, RecProc(g, x2, g_e, env)) env) in
+    let rp2 = RecProc (g, x2, g_e, extend_env (f, RecProc(f, x1, f_e, env)) env) in
     let env' = extend_env (f, rp1) env in
     let env'' = extend_env (g, rp2) env' in
     eval e env''   (* SEQ ("odd", 13) in env *)

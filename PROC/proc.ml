@@ -6,6 +6,17 @@ let run: program -> value
 = fun pgm -> 
     eval pgm empty_env;;
 
+(* letrec
+ *   even (x) = if zero? (x) then 1 else (odd (x-1))
+ *   odd (x) = if zero? (x) then 0 else (even (x-1))
+ * in (odd 13) (* true *)
+ * *)
+let e12 = LETMREC(
+            "even", "x", IF(ISZERO(VAR "x"), CONST 1, SEQ(VAR "odd", SUB(VAR "x", CONST 1))),
+            "odd", "x", IF(ISZERO(VAR "x"), CONST 0, SEQ(VAR "even", SUB(VAR "x", CONST 1))),
+            SEQ(VAR "odd", CONST 13)) in
+print_endline (string_of_value (run e12));;
+
 (* letrec double(x) = 
  *   if iszero(x) then 0 else ((double (x-1)) + 1)
  * in (double 1) *) (* 2 *)
