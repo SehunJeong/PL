@@ -4,8 +4,5 @@
 *.swp
 a.out
 dune-project
-LET/_build
-LET/.merlin
-PROC/_build
-PROC/.merlin
+.merlin
 _build
