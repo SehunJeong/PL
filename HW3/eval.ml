@@ -29,6 +29,9 @@ let rec eval: exp -> env -> value
   | LETREC (f, x, e1, e2) ->
     let rp = RecProcedure (f, x, e1, env) in
     eval e2 (extend_env (f, rp) env)
+  | LETMREC ((f, x1, f_e), (g, x2, g_e), e) ->
+    let mrp = MRecProcedure ((f, x1, f_e), (g, x2, g_e), env) in
+    eval e (extend_env (g, mrp) (extend_env (f, mrp) env))
   | PROC (x, e) -> Procedure (x, e, env)
   | CALL (e1, e2) ->
     let v = eval e2 env in
@@ -37,5 +40,12 @@ let rec eval: exp -> env -> value
       eval e (extend_env (x, v) env')
     | RecProcedure (_, x, e, _) ->
       eval e (extend_env (x, v) env)
+    | MRecProcedure ((f, x1, f_e), (g, x2, g_e), _) ->
+      (match e1 with
+      | VAR x when x = f ->
+        eval f_e (extend_env (x1, v) env) 
+      | VAR x when x = g ->
+        eval g_e (extend_env (x2, v) env) 
+      | _ -> raise (Failure ("Function not found")))
     | _ -> raise (Failure "Type Error: CALL must begin with an expression that implies a Procedure, RecProcedure, or MRecProcedure type object."))
   | _ -> raise (UndefinedSemantics "Type Error")
