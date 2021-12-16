@@ -26,14 +26,7 @@ and exp =
   | CALL of exp * exp
   | PRINT of exp
   | SEQ of exp * exp
-and var = string;;
+and var = string
 
-type value =
-  | Unit
-  | Int of int
-  | Bool of bool
-  | List of value list
-  | Procedure of var * exp * env
-  | RecProcedure of var * var * exp * env
-  | MRecProcedure of (* complete this definition *)
-and env = (var * value) list;;
+
+exception UndefinedSemantics of string
