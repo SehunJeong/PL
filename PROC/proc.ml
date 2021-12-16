@@ -12,17 +12,17 @@ let run: program -> value
  * in (odd 13) (* true *)
  * *)
 let e12 = LETMREC(
-            "even", "x", IF(ISZERO(VAR "x"), CONST 1, SEQ(VAR "odd", SUB(VAR "x", CONST 1))),
-            "odd", "x", IF(ISZERO(VAR "x"), CONST 0, SEQ(VAR "even", SUB(VAR "x", CONST 1))),
-            SEQ(VAR "odd", CONST 13)) in
+            "even", "x", IF(ISZERO(VAR "x"), CONST 1, APPLY(VAR "odd", SUB(VAR "x", CONST 1))),
+            "odd", "x", IF(ISZERO(VAR "x"), CONST 0, APPLY(VAR "even", SUB(VAR "x", CONST 1))),
+            APPLY(VAR "odd", CONST 13)) in
 print_endline (string_of_value (run e12));;
 
 (* letrec double(x) = 
  *   if iszero(x) then 0 else ((double (x-1)) + 1)
  * in (double 1) *) (* 2 *)
 let e11 = LETREC("double", "x",
-            IF(ISZERO(VAR "x"), CONST 0, ADD(SEQ(VAR "double", SUB(VAR "x", CONST 1)), CONST 2)),
-            SEQ(VAR "double", CONST 1)) in
+            IF(ISZERO(VAR "x"), CONST 0, ADD(APPLY(VAR "double", SUB(VAR "x", CONST 1)), CONST 2)),
+            APPLY(VAR "double", CONST 1)) in
 print_endline (string_of_value (run e11));;
 
 (* let x = 1
@@ -31,11 +31,11 @@ print_endline (string_of_value (run e11));;
  *       in (f 3) *) (* 4 *)
 let e10 = LET("x", CONST 1, 
             LET ("f", PROC ("y", ADD(VAR "x", VAR "y")), 
-              LET ("x", CONST 2, SEQ (VAR "f", CONST 3)))) in
+              LET ("x", CONST 2, APPLY(VAR "f", CONST 3)))) in
 print_endline (string_of_value (run e10));;
 
 (* (proc (x) (x)) 1 *) (* 1 *)
-let e9 = SEQ(PROC ("x", VAR "x"), CONST 1) in
+let e9 = APPLY(PROC ("x", VAR "x"), CONST 1) in
 print_endline (string_of_value (run e9));;
 
 (* let x = 1 in x + 2 *) (* 3 *)

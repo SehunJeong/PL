@@ -11,5 +11,5 @@ and exp =
     | LETREC of var * var * exp * exp
     | LETMREC of var * var * exp * var * var * exp * exp
     | PROC of var * exp
-    | SEQ of exp * exp
+    | APPLY of exp * exp
 and var = string
