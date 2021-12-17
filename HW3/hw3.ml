@@ -46,3 +46,30 @@ let ex3 = LETMREC
                 CALL (VAR "even", SUB (VAR "x", CONST 1)))),
             CALL (VAR "odd", CONST 13)) in
 print_endline (string_of_value (runml ex3));;
+
+(* letrec factorial(x) =
+ *          if (x = 0) then 1
+ *          else factorial(x-1) * x
+ * in letrec loop n =
+ *      if (n = 0) then ()
+ *      else (print (factorial n); loop (n-1))
+ * in (loop 10)) 
+ * 3628800
+ * 362880
+ * 40320
+ * 5040
+ * 720
+ * 120
+ * 24
+ * 6
+ * 2
+ * 1 *)
+let ex4 = LETREC ("factorial", "x",
+            IF (EQUAL (VAR "x", CONST 0), CONST 1,
+              MUL (CALL (VAR "factorial", SUB (VAR "x", CONST 1)), VAR "x")),
+            LETREC ("loop", "n",
+              IF (EQUAL (VAR "n", CONST 0), UNIT,
+                SEQ (PRINT (CALL (VAR "factorial", VAR "n")),
+                  CALL (VAR "loop", SUB (VAR "n", CONST 1)))),
+              CALL (VAR "loop", CONST 10))) in
+print_endline (string_of_value (runml ex4));;

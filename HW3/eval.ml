@@ -4,6 +4,10 @@ open Value_env
 let rec eval: exp -> env -> value
 = fun exp env ->
   match exp with
+  | UNIT ->
+    Unit
+  | TRUE -> Bool true
+  | FALSE -> Bool false
   | CONST n -> Int n
   | VAR x -> apply_env x env
   | ADD (e1, e2) ->
@@ -14,11 +18,28 @@ let rec eval: exp -> env -> value
     (match eval e1 env, eval e2 env with
     | Int n1, Int n2 -> Int (n1 - n2)
     | _ -> raise (UndefinedSemantics "Type Error: non-numeric values"))
+  | MUL (e1, e2) ->
+    (match eval e1 env, eval e2 env with
+    | Int n1, Int n2 -> Int (n1 * n2)
+    | _ -> raise (UndefinedSemantics "Type Error: non-numeric values"))
+  | DIV (_, _) -> raise (UndefinedSemantics "DIV: Undefined")
   | EQUAL (e1, e2) ->
     (match eval e1 env, eval e2 env with
     | Bool b1, Bool b2 -> if b1 = b2 then Bool true else Bool false
     | Int n1, Int n2 -> if n1 = n2 then Bool true else Bool false
     | _ -> raise (UndefinedSemantics "Type Error: equality is defined for integers and booleans"))
+  | LESS (_, _) -> raise (UndefinedSemantics "LESS: Undefined")
+  | NOT (e) -> 
+    (match eval e env with
+    | Bool true -> Bool false
+    | Bool false -> Bool true
+    | _ -> raise (UndefinedSemantics "Type Error: NOT is defined for booleans"))
+  | NIL -> raise (UndefinedSemantics "NIL: Undefined")
+  | CONS (_, _) -> raise (UndefinedSemantics "CONS: Undefined")
+  | APPEND (_, _) -> raise (UndefinedSemantics "APPEND: Undefined")
+  | HEAD (_) -> raise (UndefinedSemantics "HEAD: Undefined")
+  | TAIL (_) -> raise (UndefinedSemantics "TAIL: Undefined")
+  | ISNIL (_) -> raise (UndefinedSemantics "ISNIL: Undefined")
   | IF (e, e_true, e_false) ->
     (match eval e env with
     | Bool true -> eval e_true env
@@ -48,4 +69,9 @@ let rec eval: exp -> env -> value
         eval g_e (extend_env (x2, v) env) 
       | _ -> raise (Failure ("Function not found")))
     | _ -> raise (Failure "Type Error: CALL must begin with an expression that implies a Procedure, RecProcedure, or MRecProcedure type object."))
-  | _ -> raise (UndefinedSemantics "Type Error")
+  | PRINT (e) ->
+    print_endline (string_of_value (eval e env));
+    Unit
+  | SEQ (e1,e2) ->
+    let _ = eval e1 env in
+    eval e2 env
