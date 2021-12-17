@@ -22,7 +22,11 @@ let rec eval: exp -> env -> value
     (match eval e1 env, eval e2 env with
     | Int n1, Int n2 -> Int (n1 * n2)
     | _ -> raise (UndefinedSemantics "Type Error: non-numeric values"))
-  | DIV (_, _) -> raise (UndefinedSemantics "DIV: Undefined")
+  | DIV (e1, e2) ->
+  (match eval e1 env, eval e2 env with
+    | Int n1, Int n2 when n2 <> 0-> Int (n1 / n2)
+    | Int _, Int n2 when n2 = 0-> raise (UndefinedSemantics "Division-by-zero")
+    | _ -> raise (UndefinedSemantics "Type Error: non-numeric values"))
   | EQUAL (e1, e2) ->
     (match eval e1 env, eval e2 env with
     | Bool b1, Bool b2 -> if b1 = b2 then Bool true else Bool false
