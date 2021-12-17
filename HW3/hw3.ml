@@ -97,3 +97,48 @@ let ex6 = LETREC ("reverse", "l",
               APPEND (CALL (VAR "reverse", TAIL (VAR "l")), CONS (HEAD (VAR "l"), NIL))),
             CALL (VAR "reverse", CONS (CONST 1, CONS (CONST 2, CONS (CONST 3, NIL))))) in
 print_endline (string_of_value (runml ex6));;
+
+(* let fix = proc (f) ((proc (x) f (proc (y) ((x x) y)))
+                       (proc (x) f (proc (y) ((x x) y))))
+   in let f = fix (proc (f) (proc (x) (if (x = 0) then 1 else f(x-1) * x)))
+      in (f 10)
+Int 3628800*)
+let ex7_1 = LET ("fix",
+              PROC ("f",
+                CALL
+                  (PROC ("x",
+                    CALL (VAR "f", PROC ("y", CALL (CALL (VAR "x", VAR "x"), VAR "y")))),
+                  PROC ("x",
+                    CALL (VAR "f", PROC ("y", CALL (CALL (VAR "x", VAR "x"), VAR "y")))))),
+              LET ("f",
+                CALL (VAR "fix",
+                  PROC ("f",
+                    PROC ("x",
+                      IF (EQUAL (VAR "x", CONST 0), CONST 1,
+                        MUL (CALL (VAR "f", SUB (VAR "x", CONST 1)), VAR "x"))))),
+                 CALL (VAR "f", CONST 10))) in
+print_endline (string_of_value (runml ex7_1));;
+
+(* let fix = proc (f) ((proc (x) f (proc (y) ((x x) y)))
+                       (proc (x) f (proc (y) ((x x) y))))
+   in let f = fix (proc (range)
+                    (proc (n)
+                      (if (n = 1) then (cons 1 nil)
+                      else n::(range (n-1)))))
+      in (f 10)
+List [Int 10; Int 9; Int 8; Int 7; Int 6; Int 5; Int 4; Int 3; Int 2; Int 1]*)
+let ex7_2 = LET ("fix",
+              PROC ("f",
+                CALL
+                  (PROC ("x",
+                    CALL (VAR "f", PROC ("y", CALL (CALL (VAR "x", VAR "x"), VAR "y")))),
+                  PROC ("x",
+                    CALL (VAR "f", PROC ("y", CALL (CALL (VAR "x", VAR "x"), VAR "y")))))),
+              LET ("f",
+                CALL (VAR "fix",
+                  PROC ("range",
+                    PROC ("n",
+                      IF (EQUAL (VAR "n", CONST 1), CONS (CONST 1, NIL),
+                        CONS (VAR "n", CALL (VAR "range", SUB (VAR "n", CONST 1))))))),
+                CALL (VAR "f", CONST 10))) in
+print_endline (string_of_value (runml ex7_2));
