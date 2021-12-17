@@ -23,7 +23,8 @@ let rec eval: exp -> env -> value
   | ISZERO e -> 
     (match eval e env with
     | Int n when n = 0 -> Bool true
-    | _ -> Bool false)
+    | Int n when n <> 0 -> Bool false
+    | _ -> raise (Failure "Type Error: non-numeric values"))
   | IF (e1, e2, e3) ->
     (match eval e1 env with
     | Bool true -> eval e2 env
