@@ -40,11 +40,27 @@ let rec eval: exp -> env -> value
     (match eval e2 env with
     | List l when l = [] -> List ([v])
     | List l when l <> [] -> List (List.cons v l)
-    | _ -> raise (UndefinedSemantics ""))
-  | APPEND (_, _) -> raise (UndefinedSemantics "APPEND: Undefined")
-  | HEAD (_) -> raise (UndefinedSemantics "HEAD: Undefined")
-  | TAIL (_) -> raise (UndefinedSemantics "TAIL: Undefined")
-  | ISNIL (_) -> raise (UndefinedSemantics "ISNIL: Undefined")
+    | _ -> raise (UndefinedSemantics "Type Error: CONS is defined for lists"))
+  | APPEND (e1, e2) -> 
+    (match eval e1 env, eval e2 env with
+    | List l1, List l2 -> List (List.append l1 l2)
+    | _ -> raise (UndefinedSemantics "Type Error: APPEND is defined for lists"))
+  | HEAD (e) ->
+    (match eval e env with
+    | List l when l = [] -> raise (UndefinedSemantics "Type Error: HEAD is defined for non-empty lists")
+    | List l when l <> [] -> List.hd l
+    | _ -> raise (UndefinedSemantics "Type Error: HEAD is defined for lists"))
+  | TAIL (e) ->
+  (match eval e env with
+    | List l when l = [] -> raise (UndefinedSemantics "Type Error: TAIL is defined for non-empty lists")
+    | List l when l <> [] -> List (List.tl l)
+    | _ -> raise (UndefinedSemantics "Type Error: TAIL is defined for lists"))
+  | ISNIL (e) -> 
+    let v = eval e env in 
+    (match v with 
+    | List l when l = [] -> Bool true
+    | List l when l <> [] -> Bool false
+    | _ -> raise (UndefinedSemantics "Type Error: ISNIL is defined for lists"))
   | IF (e, e_true, e_false) ->
     (match eval e env with
     | Bool true -> eval e_true env
