@@ -43,4 +43,4 @@ let rec eval: exp -> env -> value
       eval e (extend_env (x, v) env')
     | RecProc (_, x, e, _) ->
       eval e (extend_env (x, v) env)
-    | _ -> raise (Failure "Type Error: APPLY must begin with an expression that implies a Proc, RecProc, or MRecProc type object."))
+    | _ -> raise (Failure "Type Error: APPLY must begin with an expression that implies a Proc or RecProc type object."))
