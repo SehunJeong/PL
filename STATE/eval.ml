@@ -18,7 +18,6 @@ let rec eval: exp -> env -> value
       (match v1, v2 with
       | Int n1, Int n2 -> Int (n1 - n2)
       | _ -> raise (Failure "Type Error: non-numeric values"))
-  | READ -> Int (read_int())
   | ISZERO e -> 
     (match eval e env with
     | Int n when n = 0 -> Bool true
@@ -33,14 +32,13 @@ let rec eval: exp -> env -> value
     let v1 = eval e1 env in
     eval e2 (extend_env (x, v1) env)
   | PROC (x, e) -> Proc (x, e, env)
-  | LETREC (f, x, e1, e2) ->
-    let rp = RecProc (f, x, e1, env) in
-    eval e2 (extend_env (f, rp) env)
   | APPLY (e1, e2) ->
     let v = eval e2 env in
     (match eval e1 env with
     | Proc (x, e, env') -> 
       eval e (extend_env (x, v) env')
-    | RecProc (_, x, e, _) ->
-      eval e (extend_env (x, v) env)
-    | _ -> raise (Failure "Type Error: APPLY must begin with an expression that implies a Proc or RecProc type object."))
+    | _ -> raise (Failure "Type Error: APPLY must begin with an expression that implies a Proc type object."))
+  | ALLOC (_) -> raise (Failure "Type Error: Undefined")
+  | REF (_) -> raise (Failure "Type Error: Undefined")
+  | ASSIGN (_, _) -> raise (Failure "Type Error: Undefined")
+  | SEQ (_, _) -> raise (Failure "Type Error: Undefined")

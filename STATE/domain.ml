@@ -3,20 +3,20 @@ open Lang
 type value = 
   | Int of int
   | Bool of bool
-  | Proc of proc
-  | RecProc of recproc
+  | Proc of var * exp * env
+  | Loc of loc
 and env = (var * value) list
-and proc = var * exp * env
-and recproc = var * var * exp * env
+and loc = int
+and memory = (loc * value) list
 
 let string_of_value: value -> string
 = fun v ->
   match v with
-  | Int i -> string_of_int i
-  | Bool true -> "true"
-  | Bool false -> "false"
+  | Int i -> "Int " ^ string_of_int i
+  | Bool true -> "Bool true"
+  | Bool false -> "Bool false"
   | Proc _ -> "Procedure"
-  | RecProc _ -> "RecProcedure"
+  | Loc l -> "Loc " ^ string_of_int l
 
 let empty_env = []
 

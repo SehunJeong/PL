@@ -7,14 +7,6 @@ let run: program -> value
     eval pgm empty_env;;
 
 
-(* letrec double(x) = 
- *   if iszero(x) then 0 else ((double (x-1)) + 1)
- * in (double 1) *) (* 2 *)
-let e11 = LETREC("double", "x",
-            IF(ISZERO(VAR "x"), CONST 0, ADD(APPLY(VAR "double", SUB(VAR "x", CONST 1)), CONST 2)),
-            APPLY(VAR "double", CONST 1)) in
-print_endline (string_of_value (run e11));;
-
 (* let x = 1
  * in let f = proc (y) (x+y)
  *    in let x = 2
