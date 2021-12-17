@@ -1,6 +1,5 @@
-# PL
-COSE212
-http://prl.korea.ac.kr/~pronto/home/courses/cose212/2019/
+# COURSE
+COSE212 (http://prl.korea.ac.kr/~pronto/home/courses/cose212/2019/)
 
 # Build
 ```
