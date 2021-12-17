@@ -73,3 +73,15 @@ let ex4 = LETREC ("factorial", "x",
                   CALL (VAR "loop", SUB (VAR "n", CONST 1)))),
               CALL (VAR "loop", CONST 10))) in
 print_endline (string_of_value (runml ex4));;
+
+(* letrec range(n) =
+ *        if (n = 1) then (cons 1 nil)
+ *        else n::(range (n-1))
+ *  in (range 10)
+ * List [Int 10; Int 9; Int 8; Int 7; Int 6; Int 5; Int 4; Int 3; Int 2; Int 1] *)
+
+let ex5 = LETREC ("range", "n",
+            IF (EQUAL (VAR "n", CONST 1), CONS (CONST 1, NIL),
+              CONS (VAR "n", CALL (VAR "range", SUB (VAR "n", CONST 1)))),
+            CALL (VAR "range", CONST 10)) in
+print_endline (string_of_value (runml ex5));;

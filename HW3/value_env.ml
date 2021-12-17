@@ -12,14 +12,14 @@ and env = (var * value) list
 
 let empty_env = []
 
-let string_of_value: value -> string
+let rec string_of_value: value -> string
 = fun v ->
   match v with
   | Unit -> "Unit"
-  | Int i -> string_of_int i
-  | Bool true -> "true"
-  | Bool false -> "false"
-  | List _ -> "List"
+  | Int i -> "Int " ^ string_of_int i
+  | Bool true -> "Bool true"
+  | Bool false -> "Bool false"
+  | List l -> "List [" ^ (String.concat ";" (List.map string_of_value l)) ^ "]"
   | Procedure _ -> "Procedure"
   | RecProcedure _ -> "RecProcedure"
   | MRecProcedure _ -> "MRecProcedure"
@@ -29,6 +29,6 @@ let extend_env: (var * value) -> env -> env = fun (x,v) e ->
 
 let rec apply_env: var -> env -> value = fun x e -> 
   match e with
-  | [] -> raise (Failure ("variable " ^ x ^ " not found"))
+  | [] -> raise (UndefinedSemantics ("variable " ^ x ^ " not found"))
   | (y,v)::tl -> if x = y then v else apply_env x tl
 

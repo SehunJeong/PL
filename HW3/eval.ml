@@ -34,8 +34,13 @@ let rec eval: exp -> env -> value
     | Bool true -> Bool false
     | Bool false -> Bool true
     | _ -> raise (UndefinedSemantics "Type Error: NOT is defined for booleans"))
-  | NIL -> raise (UndefinedSemantics "NIL: Undefined")
-  | CONS (_, _) -> raise (UndefinedSemantics "CONS: Undefined")
+  | NIL -> List []
+  | CONS (e1, e2) -> 
+    let v = eval e1 env in
+    (match eval e2 env with
+    | List l when l = [] -> List ([v])
+    | List l when l <> [] -> List (List.cons v l)
+    | _ -> raise (UndefinedSemantics ""))
   | APPEND (_, _) -> raise (UndefinedSemantics "APPEND: Undefined")
   | HEAD (_) -> raise (UndefinedSemantics "HEAD: Undefined")
   | TAIL (_) -> raise (UndefinedSemantics "TAIL: Undefined")
@@ -67,8 +72,8 @@ let rec eval: exp -> env -> value
         eval f_e (extend_env (x1, v) env) 
       | VAR x when x = g ->
         eval g_e (extend_env (x2, v) env) 
-      | _ -> raise (Failure ("Function not found")))
-    | _ -> raise (Failure "Type Error: CALL must begin with an expression that implies a Procedure, RecProcedure, or MRecProcedure type object."))
+      | _ -> raise (UndefinedSemantics ("MRecProcedure not found")))
+    | _ -> raise (UndefinedSemantics "Type Error: CALL must begin with an expression that implies a Procedure, RecProcedure, or MRecProcedure type object."))
   | PRINT (e) ->
     print_endline (string_of_value (eval e env));
     Unit
