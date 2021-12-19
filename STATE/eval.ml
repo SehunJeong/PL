@@ -1,44 +1,60 @@
 open Lang
 open Domain
 
-let rec eval: exp -> env -> value
-= fun exp env ->
+let rec eval: exp -> (env * memory) -> (value * memory)
+= fun exp (env, mem) ->
   match exp with
-  | CONST n -> Int n
-  | VAR x -> apply_env x env
+  | CONST n -> (Int n, mem)
+  | VAR x -> (apply_env x env, mem)
   | ADD (e1, e2) ->
-    let v1 = eval e1 env in
-    let v2 = eval e2 env in
+    let v1, m1 = eval e1 (env, mem) in
+    let v2, m2 = eval e2 (env, m1) in
       (match v1, v2 with
-      | Int n1, Int n2 -> Int (n1 + n2)
+      | Int n1, Int n2 -> (Int (n1 + n2), m2)
       | _ -> raise (Failure "Type Error: non-numeric values"))
   | SUB (e1, e2) ->
-    let v1 = eval e1 env in
-    let v2 = eval e2 env in
+    let v1, m1 = eval e1 (env, mem) in
+    let v2, m2 = eval e2 (env, m1) in
       (match v1, v2 with
-      | Int n1, Int n2 -> Int (n1 - n2)
+      | Int n1, Int n2 -> (Int (n1 - n2), m2)
       | _ -> raise (Failure "Type Error: non-numeric values"))
-  | ISZERO e -> 
-    (match eval e env with
-    | Int n when n = 0 -> Bool true
-    | Int n when n <> 0 -> Bool false
+  | ISZERO e ->
+    let v, m = eval e (env, mem) in 
+    (match v with
+    | Int n when n = 0 -> (Bool true, m)
+    | Int n when n <> 0 -> (Bool false, m)
     | _ -> raise (Failure "Type Error: non-numeric values"))
   | IF (e1, e2, e3) ->
-    (match eval e1 env with
-    | Bool true -> eval e2 env
-    | Bool false -> eval e3 env
+    let v, m = eval e1 (env, mem) in
+    (match v with
+    | Bool true -> eval e2 (env, m)
+    | Bool false -> eval e3 (env, m)
     | _ -> raise (Failure "Type Error: condition must be Bool type"))
   | LET (x, e1, e2) -> 
-    let v1 = eval e1 env in
-    eval e2 (extend_env (x, v1) env)
-  | PROC (x, e) -> Proc (x, e, env)
+    let v1, m = eval e1 (env, mem) in
+    eval e2 ((extend_env (x, v1) env), m)
+  | PROC (x, e) -> Proc (x, e, env), mem
   | APPLY (e1, e2) ->
-    let v = eval e2 env in
-    (match eval e1 env with
-    | Proc (x, e, env') -> 
-      eval e (extend_env (x, v) env')
+    (match eval e1 (env, mem) with
+    | Proc (x, e, env'), m1 -> 
+      let v, m2 = eval e2 (env, m1) in
+      eval e ((extend_env (x, v) env'), m2)
     | _ -> raise (Failure "Type Error: APPLY must begin with an expression that implies a Proc type object."))
-  | ALLOC (_) -> raise (Failure "Type Error: Undefined")
-  | REF (_) -> raise (Failure "Type Error: Undefined")
-  | ASSIGN (_, _) -> raise (Failure "Type Error: Undefined")
-  | SEQ (_, _) -> raise (Failure "Type Error: Undefined")
+  | ALLOC (e) -> 
+    let v, m1 = eval e (env, mem) in
+    new_loc := !new_loc + 1;
+    Loc !new_loc, extend_mem (!new_loc, v) m1
+  | REF (e) ->
+    (match eval e (env, mem) with
+    | Loc l, m1 -> (apply_mem l m1), m1
+    | _ -> raise (Failure "Type Error: not a location"))
+  | ASSIGN (e1, e2) ->
+    (match eval e1 (env, mem) with
+    | Loc l, m1 -> 
+      let v, m2 = eval e2 (env, m1) in
+      v, extend_mem (l, v) m2
+    | _ -> raise (Failure "Type Error: not a location"))
+  | SEQ (e1, e2) ->
+    let _, m1 = eval e1 (env, mem) in
+    let v2, m2 = eval e2 (env, m1) in
+    v2, m2
