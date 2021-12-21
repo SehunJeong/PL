@@ -9,6 +9,6 @@ and exp =
     | LET of var * exp * exp
     | PROC of var * exp
     | APPLY of exp * exp
-    | ASSIGN of exp * exp
+    | ASSIGN of var * exp
     | SEQ of exp * exp
 and var = string

@@ -5,7 +5,7 @@ type value =
   | Bool of bool
   | Proc of var * exp * env
   | Loc of loc
-and env = (var * value) list
+and env = (var * loc) list
 and loc = int
 and memory = (loc * value) list
 
@@ -26,8 +26,8 @@ let empty_env = []
 
 let empty_mem = []
 
-let extend_env: (var * value) -> env -> env = fun (x,v) e -> 
-  (x,v)::e
+let extend_env: (var * loc) -> env -> env = fun (x,l) e -> 
+  (x,l)::e
 
 let new_loc = ref 0;;
 
@@ -39,7 +39,7 @@ let rec apply_mem: loc -> memory -> value = fun l m ->
   | [] -> raise (Failure ("location " ^ string_of_int l ^ " not found"))
   | (l', v)::tl -> if l = l' then v else apply_mem l tl
 
-let rec apply_env: var -> env -> value = fun x e -> 
+let rec apply_env: var -> env -> loc = fun x e -> 
   match e with
   | [] -> raise (Failure ("variable " ^ x ^ " not found"))
-  | (y,v)::tl -> if x = y then v else apply_env x tl
+  | (y,l)::tl -> if x = y then l else apply_env x tl

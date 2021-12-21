@@ -116,6 +116,22 @@ let f = let counter = ref 0 in fun _ -> counter := !counter + 1; !counter  in le
 
 let f = fun _ -> let counter = ref 0 in counter := !counter + 1; !counter  in let a = (f 0) in let b = (f 0) in print_endline (string_of_int (a-b));;
 
+(* let f = 
+     let count = 0
+     in proc (x) (set count = count + 1; count)
+   in let a = (f 0)
+      in let b = (f 0)
+         in a - b *) (* -1 *)
+let e11 = LET("f", 
+            LET("count", CONST 0,
+            PROC("x", SEQ(ASSIGN("count", ADD(VAR "count", CONST 1)), VAR "count"))),
+          LET("a", APPLY(VAR "f", CONST 0),
+            LET("b", APPLY(VAR "f", CONST 0),
+              SUB(VAR "a", VAR "b")))) in
+let v, m = run e11 in
+print_endline (string_of_value v);
+print_endline (string_of_memory m);;
+
 (* let x = 1 in 
      let y = iszero x in 
        x + y *) (* exception *)
