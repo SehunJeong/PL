@@ -33,12 +33,18 @@ let rec eval: exp -> (env * memory) -> (value * memory)
   | LET (x, e1, e2) -> 
     let v1, m = eval e1 (env, mem) in
     eval e2 ((extend_env (x, v1) env), m)
+  | LETREC (f, x, e1, e2) -> 
+    let rp = RecProc (f, x, e1, env) in
+    eval e2 ((extend_env (f, rp) env), mem)
   | PROC (x, e) -> Proc (x, e, env), mem
   | APPLY (e1, e2) ->
     (match eval e1 (env, mem) with
     | Proc (x, e, env'), m1 -> 
       let v, m2 = eval e2 (env, m1) in
       eval e ((extend_env (x, v) env'), m2)
+    | RecProc (_, x, e, _), m1 -> 
+      let v, m2 = eval e2 (env, m1) in
+      eval e ((extend_env (x, v) env), m2)
     | _ -> raise (Failure "Type Error: APPLY must begin with an expression that implies a Proc type object."))
   | ALLOC (e) -> 
     let v, m1 = eval e (env, mem) in

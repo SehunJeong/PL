@@ -1,11 +1,10 @@
 open Lang
 
-
-
 type value = 
   | Int of int
   | Bool of bool
   | Proc of var * exp * env
+  | RecProc of var * var * exp * env
   | Loc of loc
 and env = (var * value) list
 and loc = int
@@ -18,6 +17,7 @@ let string_of_value: value -> string
   | Bool true -> "Bool true"
   | Bool false -> "Bool false"
   | Proc _ -> "Procedure"
+  | RecProc _ -> "RecProcedure"
   | Loc l -> "Loc " ^ string_of_int l
 
 let string_of_memory: memory -> string

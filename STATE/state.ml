@@ -121,6 +121,25 @@ let v, m = run e11 in
 print_endline (string_of_value v);
 print_endline (string_of_memory m);;
 
+(* let cnt = ref 0
+   in let rec is_zero(x) = cnt := !cnt + 1;
+                           if x == 0 then true
+                           else is_zero(x-1) in
+        is_zero (3)
+  Int 1 [x -> Int 4; x -> 3; ...]*)
+let e12 = LET("cnt", ALLOC (CONST 0), 
+            LETREC("call_is_zero", 
+                   "x", 
+                   SEQ(ASSIGN(VAR "cnt", ADD(REF (VAR "cnt"), CONST 1)),
+                       IF(ISZERO(VAR "x"), 
+                         CONST 1, 
+                         APPLY(VAR "call_is_zero", SUB(VAR "x", CONST 1)))),
+                   APPLY(VAR "call_is_zero", CONST 3))) in
+let v, m = run e12 in
+print_endline (string_of_value v);
+print_endline (string_of_memory m);;
+          
+
 (* let x = 1 in 
      let y = iszero x in 
        x + y *) (* exception *)
