@@ -7,6 +7,7 @@ and exp =
     | ISZERO of exp
     | IF of exp * exp * exp
     | LET of var * exp * exp
+    | LETREC of var * var * exp * exp
     | PROC of var * exp
     | APPLY of exp * exp
     | ASSIGN of var * exp

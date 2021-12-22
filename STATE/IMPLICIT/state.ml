@@ -132,6 +132,16 @@ let v, m = run e11 in
 print_endline (string_of_value v);
 print_endline (string_of_memory m);;
 
+(* letrec double(x) = 
+ *   if iszero(x) then 0 else ((double (x-1)) + 1)
+ * in (double 1) *) (* 2 *)
+let e12 = LETREC("double", "x",
+            IF(ISZERO(VAR "x"), CONST 0, ADD(APPLY(VAR "double", SUB(VAR "x", CONST 1)), CONST 2)),
+            APPLY(VAR "double", CONST 1)) in
+let v, m = run e12 in
+print_endline (string_of_value v);
+print_endline (string_of_memory m);;
+
 (* let x = 1 in 
      let y = iszero x in 
        x + y *) (* exception *)
