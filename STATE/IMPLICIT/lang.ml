@@ -17,4 +17,8 @@ and exp =
     | RECORD of var * exp * var * exp
     | FLD of exp * var
     | ASSIGNFLD of exp * var * exp
+    | DEREF of var
+    | DEREFFLD of exp * var
+    | REF of exp
+    | ASSIGNREF of exp * exp
 and var = string

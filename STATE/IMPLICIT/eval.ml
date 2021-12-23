@@ -81,4 +81,19 @@ let rec eval: exp -> (env * memory) -> (value * memory)
       let v, m2 = eval e2 (env, m1) in
       v, extend_mem (apply_rec x rcd, v) m2
     | _ -> raise (Failure "Type Error: ASSIGNFLD must begin with an expression that implies Record type object."))
+  | DEREF (x) ->
+    Loc (apply_env x env), mem
+  | DEREFFLD (e, x) ->
+    (match eval e (env, mem) with
+    | Record rcd, m1 -> Loc (apply_rec x rcd), m1
+    | _ -> raise (Failure "Type Error: DEREFFLD must begin with an expression that implies Record type object."))
+  | REF (e) ->
+    (match eval e (env, mem) with
+    | Loc l, m1 -> apply_mem l m1, m1
+    | _ -> raise (Failure "Type Error: REF must begin with an expression that implies Loc type object."))
+  | ASSIGNREF (e1, e2) ->
+    (match eval e1 (env, mem) with
+    | Loc l, m1 -> let v, m2 = eval e2 (env, m1) in v, extend_mem (l, v) m2
+    | _ -> raise (Failure "Type Error: ASSIGNREF must begin with an expression that implies Loc type object."))
+    
 
