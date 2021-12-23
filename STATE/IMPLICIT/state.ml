@@ -157,7 +157,7 @@ print_endline (string_of_memory m);;
        *y := *y + 2 *) (* 3 *)
 let e14 = LET("x", CONST 1, 
             LET("y", DEREF("x"), 
-              ASSIGNREF(REF(VAR "y"), ADD(REF(VAR "y"), CONST 2)))) in
+              ASSIGNREF(VAR "y", ADD(REF(VAR "y"), CONST 2)))) in
 let v, m = run e14 in
 print_endline (string_of_value v);
 print_endline (string_of_memory m);;
