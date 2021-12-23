@@ -6,6 +6,8 @@ type value =
   | Proc of var * exp * env
   | RecProc of var * var * exp * env
   | Loc of loc
+  | Record of rcd
+and rcd = (var * loc) list  
 and env = (var * loc) list
 and loc = int
 and memory = (loc * value) list
@@ -19,6 +21,7 @@ let string_of_value: value -> string
   | Proc _ -> "Procedure"
   | RecProc _ -> "RecProcedure"
   | Loc l -> "Loc " ^ string_of_int l
+  | Record _ -> "Record"
 
 let string_of_memory: memory -> string
 = fun m ->
@@ -45,3 +48,8 @@ let rec apply_env: var -> env -> loc = fun x e ->
   match e with
   | [] -> raise (Failure ("variable " ^ x ^ " not found"))
   | (y,l)::tl -> if x = y then l else apply_env x tl
+
+let rec apply_rec: var -> rcd -> loc = fun x r ->
+  match r with 
+  | [] -> raise (Failure ("field " ^ x ^ " not found"))
+  | (y, l)::tl -> if x = y then l else apply_rec x tl

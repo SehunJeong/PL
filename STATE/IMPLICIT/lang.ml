@@ -13,4 +13,8 @@ and exp =
     | APPLYREF of exp * var
     | ASSIGN of var * exp
     | SEQ of exp * exp
+    | EMPTYREC
+    | RECORD of var * exp * var * exp
+    | FLD of exp * var
+    | ASSIGNFLD of exp * var * exp
 and var = string

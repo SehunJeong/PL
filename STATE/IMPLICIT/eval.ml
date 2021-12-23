@@ -62,3 +62,23 @@ let rec eval: exp -> (env * memory) -> (value * memory)
     let _, m1 = eval e1 (env, mem) in
     let v2, m2 = eval e2 (env, m1) in
     v2, m2
+  | EMPTYREC -> Int 0, mem
+  | RECORD (x, e1, y, e2) ->
+    let v1, m1 = eval e1 (env, mem) in
+    let v2, m2 = eval e2 (env, m1) in
+    new_loc := !new_loc + 1;
+    let l1 = !new_loc in
+    new_loc := !new_loc + 1;
+    let l2 = !new_loc in
+    Record ((x, l1)::(y, l2)::[]), extend_mem (l2, v2) (extend_mem (l1, v1) m2)
+  | FLD (e, x) ->
+    (match eval e (env, mem) with
+    | Record rcd, m1 -> apply_mem (apply_rec x rcd) m1, m1
+    | _ -> raise (Failure "Type Error: FLD must begin with an expression that implies Record type object."))
+  | ASSIGNFLD (e1, x, e2) ->
+    (match eval e1 (env, mem) with
+    | Record rcd, m1 -> 
+      let v, m2 = eval e2 (env, m1) in
+      v, extend_mem (apply_rec x rcd, v) m2
+    | _ -> raise (Failure "Type Error: ASSIGNFLD must begin with an expression that implies Record type object."))
+
