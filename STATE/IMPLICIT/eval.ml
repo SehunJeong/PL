@@ -49,7 +49,12 @@ let rec eval: exp -> (env * memory) -> (value * memory)
       let v, m2 = eval e2 (env, m1) in
       new_loc := !new_loc + 1;
       eval e ((extend_env (x, !new_loc) env), extend_mem (!new_loc, v) m2)
-    | _ -> raise (Failure "Type Error: APPLY must begin with an expression that implies a Proc type object."))
+    | _ -> raise (Failure "Type Error: APPLY must begin with an expression that implies a Proc or RecProc type object."))
+  | APPLYREF (e1, y) ->
+    (match eval e1 (env, mem) with
+    | Proc (x, e, env'), m1 -> 
+      eval e (extend_env (x, apply_env y env) env', m1)
+    | _ -> raise (Failure "Type Error: APPLYREF must begin with an expression that implies a Proc type object."))
   | ASSIGN (x, e) ->
     let v, m1 = eval e (env, mem) in
     v, extend_mem(apply_env x env, v) m1

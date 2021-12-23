@@ -10,6 +10,7 @@ and exp =
     | LETREC of var * var * exp * exp
     | PROC of var * exp
     | APPLY of exp * exp
+    | APPLYREF of exp * var
     | ASSIGN of var * exp
     | SEQ of exp * exp
 and var = string

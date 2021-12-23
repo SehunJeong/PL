@@ -142,6 +142,16 @@ let v, m = run e12 in
 print_endline (string_of_value v);
 print_endline (string_of_memory m);;
 
+(* let p = proc (x) (set x = 4)
+   in let a = 3
+      in ((p <a>); a) *) (* 4 *)
+let e13 = LET("p", PROC("x", ASSIGN("x", CONST 4)),
+          LET("a", CONST 3,
+            SEQ(APPLYREF(VAR "p", "a"), VAR "a"))) in
+let v, m = run e13 in
+print_endline (string_of_value v);
+print_endline (string_of_memory m);;
+
 (* let x = 1 in 
      let y = iszero x in 
        x + y *) (* exception *)
