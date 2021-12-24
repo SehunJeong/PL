@@ -11,3 +11,34 @@ type memory = (loc * value) list
 type env = binding list
 and binding = LocBind of id * loc | ProcBind of id * proc
 and proc = id list * exp * env
+
+let string_of_value: value -> string
+= fun v ->
+  match v with
+  | Num i -> "Int " ^ string_of_int i
+  | Bool true -> "Bool true"
+  | Bool false -> "Bool false"
+  | Unit -> "Unit"
+  | Record _ -> "Record"
+
+let empty_env = []
+
+let empty_mem = []
+
+let new_loc = ref 0;;
+
+let extend_mem: (loc * value) -> memory -> memory = fun (l, v) mem ->
+  (l, v)::mem
+
+let rec apply_env: id -> env -> binding
+= fun v env ->
+  match env with
+  | [] -> raise (Failure ("Error: Variable " ^ v ^ " is not found."))
+  | LocBind (x, y)::tl -> if x = v then LocBind (x, y) else apply_env v tl
+  | ProcBind (x, y)::tl -> if x = v then ProcBind (x, y) else apply_env v tl
+
+let rec apply_mem: loc -> memory -> value
+= fun l mem ->
+  match mem with
+  | [] -> raise (Failure ("Error: location " ^ string_of_int l ^ " is not found."))
+  | (x, y)::tl -> if x = l then y else apply_mem l tl
