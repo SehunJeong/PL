@@ -95,5 +95,9 @@ let rec eval: exp -> (env * memory) -> (value * memory)
     (match eval e1 (env, mem) with
     | Loc l, m1 -> let v, m2 = eval e2 (env, m1) in v, extend_mem (l, v) m2
     | _ -> raise (Failure "Type Error: ASSIGNREF must begin with an expression that implies Loc type object."))
+  | FREE (e) ->
+    (match eval e (env, mem) with
+    | Loc l, m1 -> Loc l, List.filter (fun (x, _) -> x <> l) m1
+    | _ -> raise (Failure "Type Error: FREE takes an expression that implies Loc type object."))
     
 

@@ -21,4 +21,5 @@ and exp =
     | DEREFFLD of exp * var
     | REF of exp
     | ASSIGNREF of exp * exp
+    | FREE of exp
 and var = string
