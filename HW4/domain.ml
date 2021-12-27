@@ -30,6 +30,9 @@ let new_loc = ref 0;;
 let extend_mem: (loc * value) -> memory -> memory = fun (l, v) mem ->
   (l, v)::mem
 
+let extend_env: binding -> env -> env = fun b e -> 
+  b::e
+
 let rec apply_env: id -> env -> binding
 = fun v env ->
   match env with

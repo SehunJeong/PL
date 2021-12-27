@@ -16,7 +16,11 @@ let rec eval: exp -> (env * memory) -> (value * memory)
     (match rs with
     | [] -> Unit, mem
     | _ -> 
-      let values, m_n = List.fold_left (fun (vs, m) (_, e) -> let v, m' = eval e (env, m) in (v::vs, m')) ([], mem) rs in
+      let values, m_n = List.fold_left (fun (vs, m) (_, e) -> 
+                                          let v, m' = eval e (env, m) in 
+                                          (List.append vs [v], m')) 
+                                       ([], mem) 
+                                       rs in
       let id_to_locs = List.map (fun id -> new_loc := !new_loc + 1; (id, !new_loc)) (List.map (fun (id, _) -> id) rs) in
       let loc_to_values = List.map2 (fun l v -> (l, v)) (List.map (fun (_, l) -> l) id_to_locs) values in
       Record id_to_locs, List.fold_left (fun m lv -> extend_mem lv m) m_n loc_to_values)
@@ -93,8 +97,43 @@ let rec eval: exp -> (env * memory) -> (value * memory)
       eval (WHILE (e1, e2)) (env, m1)
     | Bool false, m' -> Unit, m'
     | _ -> raise (Failure "Type Error: non-boolean value"))
-  | LETF _ -> raise (Failure "Unimplemented")
-  | LETV _ -> raise (Failure "Unimplemented")
-  | CALLR _ -> raise (Failure "Unimplemented")
-  | CALLV _ -> raise (Failure "Unimplemented")
-  | WRITE _ -> raise (Failure "Unimplemented")
+  | LETV (id, e1, e2) -> 
+    let v, m' = eval e1 (env, mem) in
+    new_loc := !new_loc + 1;
+    eval e2 (extend_env (LocBind (id, !new_loc)) env, extend_mem (!new_loc, v) m')
+  | LETF (f, args, e1, e2) ->
+    eval e2 (extend_env (ProcBind (f, (args, e1, env))) env, mem)
+  | CALLV (id, exps) ->
+    (match apply_env id env with
+    | ProcBind (f, proc) -> 
+      let values, m_n = List.fold_left (fun (vs, m) e -> 
+                                          let v, m' = eval e (env, m) in 
+                                          (List.append vs [v], m')) 
+                                        ([], mem) 
+                                        exps in
+      let (args, e', env') = proc in
+      let id_to_locs = List.map (fun id -> 
+                                  new_loc := !new_loc + 1; 
+                                  (id, !new_loc)) 
+                                args in
+      let loc_to_values = List.map2 (fun l v -> (l, v)) (List.map (fun (_, l) -> l) id_to_locs) values in
+      let env'' = List.fold_left (fun env (id, l) -> extend_env (LocBind (id, l)) env) env' (id_to_locs) in
+      let env''' = extend_env (ProcBind (f, proc)) env'' in
+      let mem'' = List.fold_left (fun mem loc_val -> extend_mem loc_val mem) m_n loc_to_values in
+      eval e' (env''', mem'')
+    | _ -> raise (Failure "Type Error: non-procedure value"))
+  | CALLR (f, ids) -> 
+    (match apply_env f env with
+    | ProcBind (f, proc) -> 
+      let (args, e, env') = proc in
+      let arg_to_locs = List.map2 (fun x y -> 
+                                   (match apply_env y env with
+                                   | LocBind (_, l) -> (x, l)
+                                   (*FIXME: Better error message*)
+                                   | _ -> raise (Failure "Type Error: non-procedure value"))) args ids in
+      let env'' = List.fold_left (fun env (id, loc) -> extend_env (LocBind (id, loc)) env) env' arg_to_locs in
+      let env''' = extend_env (ProcBind (f, proc)) env'' in
+      eval e (env''', mem)
+    | _ -> raise (Failure "Type Error: non-procedure value"))
+  | WRITE (e) ->
+    eval e (env, mem)
