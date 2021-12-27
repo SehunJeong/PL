@@ -12,6 +12,8 @@ type env = binding list
 and binding = LocBind of id * loc | ProcBind of id * proc
 and proc = id list * exp * env
 
+exception UndefinedSemantics of string
+
 let string_of_value: value -> string
 = fun v ->
   match v with
@@ -36,12 +38,12 @@ let extend_env: binding -> env -> env = fun b e ->
 let rec apply_env: id -> env -> binding
 = fun v env ->
   match env with
-  | [] -> raise (Failure ("Error: Variable " ^ v ^ " is not found."))
+  | [] -> raise (UndefinedSemantics ("Error: Variable " ^ v ^ " is not found."))
   | LocBind (x, y)::tl -> if x = v then LocBind (x, y) else apply_env v tl
   | ProcBind (x, y)::tl -> if x = v then ProcBind (x, y) else apply_env v tl
 
 let rec apply_mem: loc -> memory -> value
 = fun l mem ->
   match mem with
-  | [] -> raise (Failure ("Error: location " ^ string_of_int l ^ " is not found."))
+  | [] -> raise (UndefinedSemantics ("Error: location " ^ string_of_int l ^ " is not found."))
   | (x, y)::tl -> if x = l then y else apply_mem l tl

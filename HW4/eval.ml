@@ -11,7 +11,7 @@ let rec eval: exp -> (env * memory) -> (value * memory)
   | VAR x -> 
     (match apply_env x env with
     | LocBind(_, b) -> apply_mem b mem, mem
-    | _ -> raise (Failure ("Error: Evaluating VAR expression returns a non-location object")))
+    | _ -> raise (UndefinedSemantics ("Error: Evaluating VAR expression returns a non-location object")))
   | RECORD rs ->
     (match rs with
     | [] -> Unit, mem
@@ -29,26 +29,26 @@ let rec eval: exp -> (env * memory) -> (value * memory)
     let v2, m'' = eval e2 (env, m') in
     (match v1, v2 with
     | Num n1, Num n2 -> Num (n1 + n2), m''
-    | _ -> raise (Failure "Type Error: non-numeric values"))
+    | _ -> raise (UndefinedSemantics "Type Error: non-numeric values"))
   | SUB (e1, e2) ->
     let v1, m' = eval e1 (env, mem) in
     let v2, m'' = eval e2 (env, m') in
     (match v1, v2 with
     | Num n1, Num n2 -> Num (n1 - n2), m''
-    | _ -> raise (Failure "Type Error: non-numeric values"))
+    | _ -> raise (UndefinedSemantics "Type Error: non-numeric values"))
   | MUL (e1, e2) ->
     let v1, m' = eval e1 (env, mem) in
     let v2, m'' = eval e2 (env, m') in
     (match v1, v2 with
     | Num n1, Num n2 -> Num (n1 * n2), m''
-    | _ -> raise (Failure "Type Error: non-numeric values"))
+    | _ -> raise (UndefinedSemantics "Type Error: non-numeric values"))
   | DIV (e1, e2) ->
     let v1, m' = eval e1 (env, mem) in
     let v2, m'' = eval e2 (env, m') in
     (match v1, v2 with
     | Num n1, Num n2 when n2 <> 0 -> Num (n1 + n2), m''
-    | Num _, Num n2 when n2 = 0 -> raise (Failure "Undefined semantics: Division-by-zero.")
-    | _ -> raise (Failure "Type Error: non-numeric values"))
+    | Num _, Num n2 when n2 = 0 -> raise (UndefinedSemantics "Undefined semantics: Division-by-zero.")
+    | _ -> raise (UndefinedSemantics "Type Error: non-numeric values"))
   | EQUAL (e1, e2) ->
     let v1, m' = eval e1 (env, mem) in
     let v2, m'' = eval e2 (env, m') in
@@ -62,25 +62,25 @@ let rec eval: exp -> (env * memory) -> (value * memory)
     let v2, m'' = eval e2 (env, m') in
     (match v1, v2 with
     | Num n1, Num n2 -> Bool (n1 < n2), m''
-    | _ -> raise (Failure "Type Error: non-numeric values"))
+    | _ -> raise (UndefinedSemantics "Type Error: non-numeric values"))
   | NOT (e1) ->
     let v1, m' = eval e1 (env, mem) in
     (match v1 with
     | Bool b1 -> Bool (not b1), m'
-    | _ -> raise (Failure "Type Error: non-boolean values"))
+    | _ -> raise (UndefinedSemantics "Type Error: non-boolean values"))
   | ASSIGN (id, e1) ->
     let v1, m' = eval e1 (env, mem) in
     (match apply_env id env with
     | LocBind (_, y) -> v1, extend_mem (y, v1) m'
-    | _ -> raise (Failure "Type Error: l-value of ASSIGN should imply an identifier"))
-  | ASSIGNF _ -> raise (Failure "Unimplemented")
+    | _ -> raise (UndefinedSemantics "Type Error: l-value of ASSIGN should imply an identifier"))
+  | ASSIGNF _ -> raise (UndefinedSemantics "Unimplemented")
   | FIELD (e1, id) ->
     let r, m' = eval e1 (env, mem) in
     (match r with
     | Record r -> 
       let (_, l) = List.find (fun (x, _) -> x = id) r in 
       apply_mem l m', m'
-    | _ -> raise (Failure "Type Error: l-value of FIELD should imply a record"))
+    | _ -> raise (UndefinedSemantics "Type Error: l-value of FIELD should imply a record"))
   | SEQ (e1, e2) ->
     let _, m' = eval e1 (env, mem) in
     let v2, m'' = eval e2 (env, m') in
@@ -89,14 +89,14 @@ let rec eval: exp -> (env * memory) -> (value * memory)
     (match eval e (env, mem) with
     | Bool true, m' -> eval e1 (env, m')
     | Bool false, m' -> eval e2 (env, m')
-    | _ -> raise (Failure "Type Error: non-boolean value"))
+    | _ -> raise (UndefinedSemantics "Type Error: non-boolean value"))
   | WHILE (e1, e2) ->
     (match eval e1 (env, mem) with
     | Bool true, m' -> 
       let _, m1 = eval e2 (env, m') in
       eval (WHILE (e1, e2)) (env, m1)
     | Bool false, m' -> Unit, m'
-    | _ -> raise (Failure "Type Error: non-boolean value"))
+    | _ -> raise (UndefinedSemantics "Type Error: WHILE's first expression should imply boolean value"))
   | LETV (id, e1, e2) -> 
     let v, m' = eval e1 (env, mem) in
     new_loc := !new_loc + 1;
@@ -121,7 +121,7 @@ let rec eval: exp -> (env * memory) -> (value * memory)
       let env''' = extend_env (ProcBind (f, proc)) env'' in
       let mem'' = List.fold_left (fun mem loc_val -> extend_mem loc_val mem) m_n loc_to_values in
       eval e' (env''', mem'')
-    | _ -> raise (Failure "Type Error: non-procedure value"))
+    | _ -> raise (UndefinedSemantics "Type Error: CALLV's first expression should imply a procedure"))
   | CALLR (f, ids) -> 
     (match apply_env f env with
     | ProcBind (f, proc) -> 
@@ -129,11 +129,10 @@ let rec eval: exp -> (env * memory) -> (value * memory)
       let arg_to_locs = List.map2 (fun x y -> 
                                    (match apply_env y env with
                                    | LocBind (_, l) -> (x, l)
-                                   (*FIXME: Better error message*)
-                                   | _ -> raise (Failure "Type Error: non-procedure value"))) args ids in
+                                   | _ -> raise (UndefinedSemantics "Type Error: actual parameters should imply locations"))) args ids in
       let env'' = List.fold_left (fun env (id, loc) -> extend_env (LocBind (id, loc)) env) env' arg_to_locs in
       let env''' = extend_env (ProcBind (f, proc)) env'' in
       eval e (env''', mem)
-    | _ -> raise (Failure "Type Error: non-procedure value"))
+    | _ -> raise (UndefinedSemantics "Type Error: CALLR's first expression should imply a procedure"))
   | WRITE (e) ->
     eval e (env, mem)
