@@ -47,3 +47,9 @@ let rec apply_mem: loc -> memory -> value
   match mem with
   | [] -> raise (UndefinedSemantics ("Error: location " ^ string_of_int l ^ " is not found."))
   | (x, y)::tl -> if x = l then y else apply_mem l tl
+
+let rec apply_rec: id -> record -> loc
+= fun x r ->
+  match r with
+  | [] -> raise (UndefinedSemantics ("Error: Field " ^ x ^ " is not found."))
+  | (y, l)::tl -> if x = y then l else apply_rec x tl

@@ -73,7 +73,13 @@ let rec eval: exp -> (env * memory) -> (value * memory)
     (match apply_env id env with
     | LocBind (_, y) -> v1, extend_mem (y, v1) m'
     | _ -> raise (UndefinedSemantics "Type Error: l-value of ASSIGN should imply an identifier"))
-  | ASSIGNF _ -> raise (UndefinedSemantics "Unimplemented")
+  | ASSIGNF (e1, x, e2) -> 
+    let r, m1 = eval e1 (env, mem) in
+    (match r with
+    | Record r -> 
+      let v, m2 = eval e2 (env, m1) in
+      v, extend_mem (apply_rec x r, v) m2
+    | _ -> raise (UndefinedSemantics "Type Error: l-value of ASSIGNF should imply a record"))
   | FIELD (e1, id) ->
     let r, m' = eval e1 (env, mem) in
     (match r with
