@@ -53,3 +53,32 @@ let rec apply_rec: id -> record -> loc
   match r with
   | [] -> raise (UndefinedSemantics ("Error: Field " ^ x ^ " is not found."))
   | (y, l)::tl -> if x = y then l else apply_rec x tl
+
+let rec reach: env -> memory -> loc list
+= fun env mem ->
+  let domains = List.map 
+                  (fun b -> match b with 
+                            | LocBind (x, _) -> x
+                            | ProcBind (x, _) -> x
+                  ) env in  
+  let tmp = List.fold_left (fun r id -> match apply_env id env with
+                                        | LocBind (_, l) -> l::r
+                                        | ProcBind (_, (_, _, env')) -> List.append r (reach env' mem)
+                            ) [] domains in
+  let rec dig_loc: loc -> loc list
+  = fun l ->
+    match apply_mem l mem with
+    | Record id_loc_list -> 
+      List.fold_left (fun loc_list (_, loc) -> loc) [] id_loc_list
+    | _ -> in
+
+  
+
+
+let gc: env -> memory -> memory
+= fun env mem ->
+  let reach: -> 
+  
+  
+
+  mem
