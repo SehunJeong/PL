@@ -61,24 +61,23 @@ let rec reach: env -> memory -> loc list
                             | LocBind (x, _) -> x
                             | ProcBind (x, _) -> x
                   ) env in  
-  let tmp = List.fold_left (fun r id -> match apply_env id env with
-                                        | LocBind (_, l) -> l::r
-                                        | ProcBind (_, (_, _, env')) -> List.append r (reach env' mem)
-                            ) [] domains in
+  let tmp = List.fold_left 
+              (fun r id -> match apply_env id env with
+                           | LocBind (_, l) -> l::r
+                           | ProcBind (_, (_, _, env')) -> List.append r (reach env' mem)
+              ) [] domains in
   let rec dig_loc: loc -> loc list
   = fun l ->
     match apply_mem l mem with
     | Record id_loc_list -> 
-      List.fold_left (fun loc_list (_, loc) -> loc) [] id_loc_list
-    | _ -> in
-
-  
-
+      List.fold_left 
+        (fun locs (_, loc) -> 
+          List.append locs (dig_loc loc)
+        ) [l] id_loc_list
+    | _ -> [l] in
+  List.concat_map (fun loc -> dig_loc loc) tmp
 
 let gc: env -> memory -> memory
 = fun env mem ->
-  let reach: -> 
-  
-  
-
-  mem
+  let r = reach env mem in
+  List.filter (fun (l, _) -> List.mem l r) mem
