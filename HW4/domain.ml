@@ -54,6 +54,10 @@ let rec apply_rec: id -> record -> loc
   | [] -> raise (UndefinedSemantics ("Error: Field " ^ x ^ " is not found."))
   | (y, l)::tl -> if x = y then l else apply_rec x tl
 
+let string_of_memory: memory -> string
+= fun m ->
+  "List [" ^ (String.concat ";" (List.map (fun (l, v) -> string_of_int l ^ "->" ^ string_of_value v) m)) ^ "]"
+
 let rec reach: env -> memory -> loc list
 = fun env mem ->
   let domains = List.map 

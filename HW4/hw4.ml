@@ -73,3 +73,13 @@ let e3 = LETV ("f", RECORD ([("x", NUM 10); ("y", NUM 13)]),
         ) in
 let v = runb e3 in
 print_endline (string_of_value v);;
+
+(* BEFORE
+   p = [x -> 1, y-> 2]
+   r = [1 -> 0, 2 -> {a -> 3, b -> 1}, 3 -> {c -> 4}, 4 -> 0, 5 -> 0]
+   
+   AFTER
+   r = [1 -> 0, 2 -> {a -> 3, b -> 1}, 3 -> {c -> 4}, 4 -> 0]*)
+let env = [LocBind ("x", 1); LocBind ("y", 2)] in
+let mem = [(1, Num 0); (2, Record [("a", 3); ("b", 1)]); (3, Record [("c", 4)]); (4, Num 0); (5, Num 0)] in
+print_endline (string_of_memory (gc env mem));;
