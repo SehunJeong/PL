@@ -1,5 +1,8 @@
-# COURSE
+# Course
 COSE212 (http://prl.korea.ac.kr/~pronto/home/courses/cose212/2019/)
+
+# Book
+Essentials of Programming Languages
 
 # Build
 ```
