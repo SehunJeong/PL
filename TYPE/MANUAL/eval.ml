@@ -31,8 +31,8 @@ let rec eval: exp -> env -> value
   | LET (x, e1, e2) -> 
     let v1 = eval e1 env in
     eval e2 (extend_env (x, v1) env)
-  | PROC (x, e) -> Proc (x, e, env)
-  | LETREC (f, x, e1, e2) ->
+  | PROC (x, _, e) -> Proc (x, e, env)
+  | LETREC (_, f, x, _, e1, e2) ->
     let rp = RecProc (f, x, e1, env) in
     eval e2 (extend_env (f, rp) env)
   | APPLY (e1, e2) ->
