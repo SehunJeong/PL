@@ -75,7 +75,8 @@ let rec gen_equations : TEnv.t -> exp -> typ -> typ_eqn
 =fun tenv e ty -> 
   match e with
   | CONST _ -> [(ty, TyInt)]
-  | VAR x -> [(ty, TEnv.find tenv x)]
+  | VAR x -> 
+    (try [(ty, TEnv.find tenv x)] with _ -> [(ty, ty)])
   | ADD (e1, e2) | SUB (e1, e2) | MUL (e1, e2) | DIV (e1, e2) ->
     let eqns'' = gen_equations tenv e2 TyInt in
     let eqns' = gen_equations tenv e1 TyInt in
@@ -99,7 +100,7 @@ let rec gen_equations : TEnv.t -> exp -> typ -> typ_eqn
     let eqns' = gen_equations tenv e1 tv_for_e1 in
     let tenv' = TEnv.extend (x, tv_for_x) tenv in
     let eqns'' = gen_equations tenv' e2 tv_for_e2 in
-    [(TEnv.find tenv' x, tv_for_e1); (tv_for_e2, ty)]@eqns'@eqns''
+    [(tv_for_x, tv_for_e1); (tv_for_e2, ty)]@eqns'@eqns''
   | LETREC (f, x, e1, e2) -> 
     let tv_for_f = fresh_tyvar () in
     let tv_for_x = fresh_tyvar () in 
@@ -109,13 +110,13 @@ let rec gen_equations : TEnv.t -> exp -> typ -> typ_eqn
     let tenv'' = TEnv.extend (f, TyFun(tv_for_x, tv_for_f)) tenv in
     let eqns'' = gen_equations tenv'' e2 ty in 
     eqns'@eqns''
-  | PROC (f, e) -> 
-    let tv_for_f = fresh_tyvar () in
+  | PROC (x, e) -> 
+    let tv_for_x = fresh_tyvar () in
     let tv_for_e = fresh_tyvar () in
-    let tenv' = TEnv.extend (f, tv_for_f) tenv in
-    (ty, TyFun (tv_for_f, tv_for_e))::gen_equations tenv' e tv_for_e
-  | CALL (fe, e) ->
-    (match fe with
+    let tenv' = TEnv.extend (x, tv_for_x) tenv in
+    (ty, TyFun (tv_for_x, tv_for_e))::gen_equations tenv' e tv_for_e
+  | CALL (f, e) ->
+    (match f with
     | VAR f -> 
       let tv_for_f = TEnv.find tenv f in
       let tv_for_e = fresh_tyvar () in
