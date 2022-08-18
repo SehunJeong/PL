@@ -72,7 +72,34 @@ let tyvar_num = ref 0
 let fresh_tyvar () = (tyvar_num := !tyvar_num + 1; (TyVar ("t" ^ string_of_int !tyvar_num)))
 
 let rec gen_equations : TEnv.t -> exp -> typ -> typ_eqn 
-=fun tenv e ty -> raise TypeError (* TODO *)
+=fun tenv e ty -> 
+  match e with
+  | CONST _ -> [(ty, TyInt)]
+  | VAR x -> [(ty, TEnv.find tenv x)]
+  | ADD (e1, e2) | SUB (e1, e2) | MUL (e1, e2) | DIV (e1, e2) ->
+    let eqns'' = gen_equations tenv e2 TyInt in
+    let eqns' = gen_equations tenv e1 TyInt in
+    (ty, TyInt)::(eqns'@eqns'')
+  | ISZERO (e) -> [(ty, TyBool)]
+  | READ -> raise TypeError
+  | IF (e1, e2, e3) -> raise TypeError
+  | LET (x, e1, e2) -> raise TypeError
+  | LETREC (x, y, e1, e2) -> raise TypeError
+  | PROC (x, e) -> 
+    let tv_for_x = fresh_tyvar () in
+    let tv_for_e = fresh_tyvar () in
+    let tenv' = TEnv.extend (x, tv_for_x) tenv in
+    (ty, TyFun (tv_for_x, tv_for_e))::gen_equations tenv' e tv_for_e
+  | CALL (e1, e2) ->
+    (match e1 with
+    | VAR x -> 
+      let tv_for_x = TEnv.find tenv x in
+      let tv_for_e2 = fresh_tyvar () in
+      (tv_for_x, TyFun(tv_for_e2, ty))::gen_equations tenv e2 tv_for_e2
+    | _ -> raise TypeError)
+    (*t_e1 = t_e2 -> t_e1_e2*)
+
+
 
 let solve : typ_eqn -> Subst.t
 =fun eqns -> raise TypeError (* TODO *)
