@@ -6,3 +6,4 @@ a.out
 dune-project
 .merlin
 _build
+.vscode/settings.json
