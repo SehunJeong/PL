@@ -80,16 +80,18 @@ let rec gen_equations : TEnv.t -> exp -> typ -> typ_eqn
     let eqns'' = gen_equations tenv e2 TyInt in
     let eqns' = gen_equations tenv e1 TyInt in
     (ty, TyInt)::(eqns'@eqns'')
-  | ISZERO (e) -> [(ty, TyBool)]
+  | ISZERO (e) -> 
+    let eqns' = gen_equations tenv e TyInt in 
+    (ty, TyBool)::eqns'
   | READ -> [(ty, TyInt)]
   | IF (e1, e2, e3) -> 
     let tv_for_e1 = fresh_tyvar () in
     let tv_for_e2 = fresh_tyvar () in
     let tv_for_e3 = fresh_tyvar () in
     let eqns' = gen_equations tenv e1 tv_for_e1 in
-    let eqns'' = gen_equations tenv e1 tv_for_e1 in
-    let eqns''' = gen_equations tenv e1 tv_for_e1 in
-    [(tv_for_e1, TyBool); (tv_for_e2, ty); (tv_for_e3, ty)]@eqns'@eqns''@eqns'''
+    let eqns'' = gen_equations tenv e2 tv_for_e2 in
+    let eqns''' = gen_equations tenv e3 tv_for_e3 in
+    [(tv_for_e2, ty); (tv_for_e3, ty)]@eqns'@eqns''@eqns'''
   | LET (x, e1, e2) -> 
     let tv_for_x = fresh_tyvar () in
     let tv_for_e1 = fresh_tyvar () in
@@ -98,7 +100,15 @@ let rec gen_equations : TEnv.t -> exp -> typ -> typ_eqn
     let tenv' = TEnv.extend (x, tv_for_x) tenv in
     let eqns'' = gen_equations tenv' e2 tv_for_e2 in
     [(TEnv.find tenv' x, tv_for_e1); (tv_for_e2, ty)]@eqns'@eqns''
-  | LETREC (x, y, e1, e2) -> raise TypeError
+  | LETREC (f, x, e1, e2) -> 
+    let tv_for_f = fresh_tyvar () in
+    let tv_for_x = fresh_tyvar () in 
+    let tv_for_e1 = fresh_tyvar () in 
+    let tenv' = TEnv.extend (f, TyFun(tv_for_x, tv_for_f)) (TEnv.extend (x, tv_for_x) tenv) in 
+    let eqns' = gen_equations tenv' e1 tv_for_e1 in 
+    let tenv'' = TEnv.extend (f, TyFun(tv_for_x, tv_for_f)) tenv in
+    let eqns'' = gen_equations tenv'' e2 ty in 
+    eqns'@eqns''
   | PROC (f, e) -> 
     let tv_for_f = fresh_tyvar () in
     let tv_for_e = fresh_tyvar () in
