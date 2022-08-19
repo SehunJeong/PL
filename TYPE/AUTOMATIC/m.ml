@@ -122,12 +122,44 @@ let rec gen_equations : TEnv.t -> exp -> typ -> typ_eqn
       let tv_for_e = fresh_tyvar () in
       (tv_for_f, TyFun(tv_for_e, ty))::gen_equations tenv e tv_for_e
     | _ -> raise TypeError)
-    (*t_e1 = t_e2 -> t_e1_e2*)
 
-
+let rec is_contradict : typ -> typ -> bool
+=fun t1 t2 ->
+  match (t1, t2) with
+  | (TyVar _, _) | (_, TyVar _) -> false
+  | (TyFun (x, y), TyFun (x', y')) -> (is_contradict x x' || is_contradict y y')
+  | (TyFun _, _) | (_, TyFun _) -> true
+  | (TyBool, TyInt) | (TyInt, TyBool) -> true
+  | (TyBool, TyBool) | (TyInt, TyInt) -> false
+  
 
 let solve : typ_eqn -> Subst.t
-=fun eqns -> raise TypeError (* TODO *)
+=fun eqns -> 
+  let rec simplifying : typ_eqn -> typ_eqn
+  =fun eqns ->
+    List.concat_map (fun eqn -> 
+      match eqn with
+      | (TyFun (t1, t2), TyFun (t1', t2')) -> simplifying [(t1, t1')]@simplifying [(t2, t2')]
+      | _ -> [eqn]) eqns 
+  in 
+  let switch_and_check : (typ * typ) -> (typ * typ)
+  =fun (t1, t2) ->
+    (t1, t2)
+  in
+  let solve_eqn : Subst.t -> (typ * typ) -> Subst.t
+  =fun subst (t1, t2) ->
+    let (t1', t2') = (Subst.apply t1 subst, Subst.apply t2 subst) in
+    if t1' = t2' then subst 
+    else begin 
+      if is_contradict t1' t2' then raise TypeError
+      else begin
+        let (t1'', t2'') = switch_and_check (t1', t2') in
+        subst
+      end 
+    end
+  in
+  let eqns' = simplifying eqns in 
+  List.fold_left solve_eqn Subst.empty eqns'
 
 (* typeof: Do not modify this function *)
 let typeof : exp -> typ 
