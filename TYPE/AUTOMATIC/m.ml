@@ -131,35 +131,46 @@ let rec is_contradict : typ -> typ -> bool
   | (TyFun _, _) | (_, TyFun _) -> true
   | (TyBool, TyInt) | (TyInt, TyBool) -> true
   | (TyBool, TyBool) | (TyInt, TyInt) -> false
+ 
+let rec is_LH_in_RH : typ -> typ -> bool
+= fun left right ->
+  match (left, right) with
+  | (TyVar _, TyInt) | (TyVar _, TyBool) | (TyInt, _) | (TyBool, _) | (TyFun (_, _), _)-> false
+  | (TyVar x, TyVar y) -> if x = y then true else false
+  | (TyVar _, TyFun (y, z)) -> if (is_LH_in_RH left y = true) && (is_LH_in_RH left z = true) then true else false
   
 
+let substitute : Subst.t -> (typ * typ) -> Subst.t
+= fun subst (t1, t2) ->
+  subst
+
+
+let rec solve_eqn : Subst.t -> (typ * typ) -> Subst.t
+=fun subst (t1, t2) ->
+  (*Apply the current substitution to the equation*)
+  let (t1', t2') = (Subst.apply t1 subst, Subst.apply t2 subst) in
+  (*If the equation is always true, discard it*)
+  if t1' = t2' then subst else begin
+  (*If the left- and right-hand sides are contradictory, the algorithm fails*)
+  if is_contradict t1' t2' then raise TypeError else begin
+  (*If neither side is a variable, simplify the equation*)
+  match (t1', t2') with
+  | (TyFun (x, y), TyFun(z, w)) -> solve_eqn (solve_eqn subst (x, z)) (y, w)
+  | _ -> begin
+  (*If the left-hand side is not a variable, switch the sides*)
+  let (t1'', t2'') = match (t1', t2') with
+  | (TyVar _, _) -> t1', t2'
+  | _ -> t2', t1' in 
+  (*If the left-hand side variable occurs in the right-hand side, the algorithm fails*)
+  if is_LH_in_RH t1'' t2'' = true then raise TypeError else begin
+  (*Otherwise, move the equation to the substitution and substitute the right-hand side for each occurrence of the variale in the substitution*)
+  substitute subst (t1'', t2'')
+  end end end end
+    
+
 let solve : typ_eqn -> Subst.t
-=fun eqns -> 
-  let rec simplifying : typ_eqn -> typ_eqn
-  =fun eqns ->
-    List.concat_map (fun eqn -> 
-      match eqn with
-      | (TyFun (t1, t2), TyFun (t1', t2')) -> simplifying [(t1, t1')]@simplifying [(t2, t2')]
-      | _ -> [eqn]) eqns 
-  in 
-  let switch_and_check : (typ * typ) -> (typ * typ)
-  =fun (t1, t2) ->
-    (t1, t2)
-  in
-  let solve_eqn : Subst.t -> (typ * typ) -> Subst.t
-  =fun subst (t1, t2) ->
-    let (t1', t2') = (Subst.apply t1 subst, Subst.apply t2 subst) in
-    if t1' = t2' then subst 
-    else begin 
-      if is_contradict t1' t2' then raise TypeError
-      else begin
-        let (t1'', t2'') = switch_and_check (t1', t2') in
-        subst
-      end 
-    end
-  in
-  let eqns' = simplifying eqns in 
-  List.fold_left solve_eqn Subst.empty eqns'
+=fun eqns ->
+  List.fold_left solve_eqn Subst.empty eqns
 
 (* typeof: Do not modify this function *)
 let typeof : exp -> typ 
