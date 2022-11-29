@@ -15,6 +15,25 @@ and exp =
   | CALL of exp * exp
 and var = string
 
+let rec string_of_exp : exp -> string
+= fun e ->
+  match e with
+  | CONST i -> string_of_int i
+  | VAR x -> x
+  | ADD (e1, e2) -> (string_of_exp e1) ^ " + " ^ (string_of_exp e2)
+  | SUB (e1, e2) -> (string_of_exp e1) ^ " - " ^ (string_of_exp e2)
+  | MUL (e1, e2) -> (string_of_exp e1) ^ " * " ^ (string_of_exp e2)
+  | DIV (e1, e2) -> (string_of_exp e1) ^ " / " ^ (string_of_exp e2)
+  | ISZERO e -> string_of_exp e ^ " == 0?"
+  | READ -> "READ"
+  | IF (e1, e2, e3) -> "if (" ^ string_of_exp e1 ^ ") then (" ^ string_of_exp e2 ^ ") else (" ^ string_of_exp e2
+  | LET (x, e1, e2) -> "let " ^ x ^ " = " ^ string_of_exp e1 ^ ", " ^ string_of_exp e2
+  | LETREC (x, y, e1, e2) -> "letrec " ^ x ^ "(" ^ y ^ ") = " ^ string_of_exp e1 ^ ", " ^ string_of_exp e2
+  | PROC (x, e) -> "proc (" ^ x ^ ") " ^ string_of_exp e
+  | CALL (e1, e2) -> "(" ^ string_of_exp e1 ^ " " ^ string_of_exp e2 ^ ")"
+
+
+
 exception TypeError
 
 type typ = TyInt | TyBool | TyFun of typ * typ | TyVar of tyvar
@@ -115,13 +134,13 @@ let rec gen_equations : TEnv.t -> exp -> typ -> typ_eqn
     let tv_for_e = fresh_tyvar () in
     let tenv' = TEnv.extend (x, tv_for_x) tenv in
     (ty, TyFun (tv_for_x, tv_for_e))::gen_equations tenv' e tv_for_e
-  | CALL (f, e) ->
-    (match f with
+  | CALL (e1, e2) ->
+    (match e1 with
     | VAR f -> 
       let tv_for_f = TEnv.find tenv f in
       let tv_for_e = fresh_tyvar () in
-      (tv_for_f, TyFun(tv_for_e, ty))::gen_equations tenv e tv_for_e
-    | _ -> raise TypeError)
+      (tv_for_f, TyFun(tv_for_e, ty))::gen_equations tenv e2 tv_for_e
+    | _ -> let _ = print_endline(string_of_exp e1) in raise TypeError)
 
 let rec is_contradict : typ -> typ -> bool
 =fun t1 t2 ->
@@ -137,7 +156,7 @@ let rec is_LH_in_RH : typ -> typ -> bool
   match (left, right) with
   | (TyVar _, TyInt) | (TyVar _, TyBool) | (TyInt, _) | (TyBool, _) | (TyFun (_, _), _)-> false
   | (TyVar x, TyVar y) -> if x = y then true else false
-  | (TyVar _, TyFun (y, z)) -> if (is_LH_in_RH left y = true) && (is_LH_in_RH left z = true) then true else false
+  | (TyVar _, TyFun (y, z)) -> if (is_LH_in_RH left y = true) || (is_LH_in_RH left z = true) then true else false
   
 
 let rec substitute : Subst.t -> (tyvar * typ) -> Subst.t
