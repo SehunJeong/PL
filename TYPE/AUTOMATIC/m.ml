@@ -140,9 +140,15 @@ let rec is_LH_in_RH : typ -> typ -> bool
   | (TyVar _, TyFun (y, z)) -> if (is_LH_in_RH left y = true) && (is_LH_in_RH left z = true) then true else false
   
 
-let substitute : Subst.t -> (typ * typ) -> Subst.t
-= fun subst (t1, t2) ->
-  subst
+let rec substitute : Subst.t -> (tyvar * typ) -> Subst.t
+= fun subst (tv, t) ->
+  let rec sub_one : typ -> typ
+  = fun sub_typ -> 
+    match sub_typ with
+    | TyInt | TyBool -> sub_typ
+    | TyVar x -> if x = tv then t else sub_typ
+    | TyFun (x, y) -> TyFun (sub_one x, sub_one y)
+  in List.map (fun (sub_tvar, sub_t) -> (sub_tvar, sub_one sub_t)) subst
 
 
 let rec solve_eqn : Subst.t -> (typ * typ) -> Subst.t
@@ -164,7 +170,9 @@ let rec solve_eqn : Subst.t -> (typ * typ) -> Subst.t
   (*If the left-hand side variable occurs in the right-hand side, the algorithm fails*)
   if is_LH_in_RH t1'' t2'' = true then raise TypeError else begin
   (*Otherwise, move the equation to the substitution and substitute the right-hand side for each occurrence of the variale in the substitution*)
-  substitute subst (t1'', t2'')
+  match t1'' with
+  | TyVar x -> (x, t2'')::substitute subst (x, t2'')
+  | _ -> raise TypeError
   end end end end
     
 
