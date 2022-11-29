@@ -11,5 +11,5 @@ dune build
 
 # Run
 ```
-dune exec ./<project_name>.exe
+dune exec -- ./<project_name>.exe <ARG>
 ```
