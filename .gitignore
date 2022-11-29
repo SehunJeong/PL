@@ -6,3 +6,4 @@ a.out
 .merlin
 _build
 .vscode/settings.json
+.DS_Store
