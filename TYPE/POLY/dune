@@ -1,0 +1,7 @@
+(env
+  (dev
+    (flags (:standard -w -39 -w -27 -w -32))))
+(ocamllex lexer)
+(ocamlyacc parser)
+(executable
+  (name main))
