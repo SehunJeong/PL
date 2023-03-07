@@ -81,7 +81,33 @@ let fresh_tyvar () =
   tyvar_num := !tyvar_num + 1;
   TyVar ("t" ^ string_of_int !tyvar_num)
 
-let expand : exp -> exp = fun e -> e
+let rec expand : exp -> exp = 
+  fun e -> 
+    match e with
+    | LET (x, e1, e2) -> 
+        (match e2 with
+        | CONST i -> e2
+        | VAR y -> if (x = y) then expand e1 else e2
+        | ADD (e2', e2'') -> ADD (expand (LET (x, e1, e2')), expand (LET (x, e1, e2'')))
+        | SUB (e2', e2'') -> SUB (expand (LET (x, e1, e2')), expand (LET (x, e1, e2'')))
+        | MUL (e2', e2'') -> MUL (expand (LET (x, e1, e2')), expand (LET (x, e1, e2'')))
+        | DIV (e2', e2'') -> DIV (expand (LET (x, e1, e2')), expand (LET (x, e1, e2'')))
+        | ISZERO e2' -> ISZERO (expand (LET (x, e1, e2')))
+        | READ -> READ
+        | IF (e2', e2'', e2''') -> IF (expand (LET (x, e1, e2')), expand (LET (x, e1, e2'')), expand (LET (x, e1, e2''')))
+        | LET (x', e1', e2') -> expand (LET (x, e1, expand e2))
+        | LETREC (x', y', e1', e2') -> e2
+        | _ -> e2)
+    | ADD (e1, e2) -> ADD (expand e1, expand e2)
+    | SUB (e1, e2) -> SUB (expand e1, expand e2)
+    | MUL (e1, e2) -> MUL (expand e1, expand e2)
+    | DIV (e1, e2) -> DIV (expand e1, expand e2)
+    | ISZERO e -> ISZERO (expand e)
+    | IF (e1, e2, e3) -> IF (expand e1, expand e2, expand e3)
+    | CALL (e1, e2) -> CALL (expand e1, expand e2)
+    | PROC (v, e) -> PROC (v, expand e)
+    | _ -> e (*CONST, VAR, READ*)
+
 
 let rec gen_equations : TEnv.t -> exp -> typ -> typ_eqn =
  fun tenv e ty ->
