@@ -13,3 +13,5 @@ dune build
 ```
 dune exec -- ./<project_name>.exe <ARG>
 ```
+
+# Test
